@@ -106,9 +106,12 @@ class LibvirtCollector:
                 labels = [domainStats['uuid'], disk['name']]
                 self._disks.process(labels, disk)
             # CPU stats
-            for cpu in domainStats['cpu']['per_cpu_usage']:
-                labels = [domainStats['uuid'], str(cpu['index'])]
-                self._cpus.process(labels, cpu)
+            try:
+                for cpu in domainStats['cpu']['per_cpu_usage']:
+                    labels = [domainStats['uuid'], str(cpu['index'])]
+                    self._cpus.process(labels, cpu)
+            except KeyError:
+                print("'cpu' key is missing")        
 
         # Prometheus reports disappearing metrics for 5 minutes with the same
         # value. Report disappeared VMs for 10 minutes as down to allow

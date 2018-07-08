@@ -20,35 +20,43 @@ class Collector:
             interfaces = []
             if vm.get('net'):
                 for interface in vm['net']:
-                    interfaces.append({
-                        'name': interface['name'],
-                        'rx_bytes': interface['rx_bytes'],
-                        'rx_packets': interface['rx_pkts'],
-                        'rx_errors': interface['rx_errs'],
-                        'rx_dropped': interface['rx_drop'],
-                        'tx_bytes': interface['tx_bytes'],
-                        'tx_packets': interface['tx_pkts'],
-                        'tx_errors': interface['tx_errs'],
-                        'tx_dropped': interface['rx_drop'],
-                    }
-                    )
+                    try:
+                        interfaces.append({
+                            'name': interface['name'],
+                            'rx_bytes': interface['rx_bytes'],
+                            'rx_packets': interface['rx_pkts'],
+                            'rx_errors': interface['rx_errs'],
+                            'rx_dropped': interface['rx_drop'],
+                            'tx_bytes': interface['tx_bytes'],
+                            'tx_packets': interface['tx_pkts'],
+                            'tx_errors': interface['tx_errs'],
+                            'tx_dropped': interface['rx_drop'],
+                        }
+                        )
+                    except KeyError:
+                        print("'net' key is missing for " + vm['name'])    
+
             domainStats['network'] = {
                 'interfaces': interfaces
             }
             disks = []
             if vm.get('block'):
                 for disk in vm['block']:
-                    values = {
-                        'name': disk['name'],
-                        'rd_reqs': disk['rd_reqs'],
-                        'rd_bytes': disk['rd_bytes'],
-                        'rd_times': disk['rd_times'],
-                        'wr_reqs': disk['wr_reqs'],
-                        'wr_bytes': disk['wr_bytes'],
-                        'wr_times': disk['wr_times'],
-                        'fl_times': disk['fl_times'],
-                        'fl_reqs': disk['fl_reqs']
-                    }
+                    try:
+                        values = {
+                            'name': disk['name'],
+                            'rd_reqs': disk['rd_reqs'],
+                            'rd_bytes': disk['rd_bytes'],
+                            'rd_times': disk['rd_times'],
+                            'wr_reqs': disk['wr_reqs'],
+                            'wr_bytes': disk['wr_bytes'],
+                            'wr_times': disk['wr_times'],
+                            'fl_times': disk['fl_times'],
+                            'fl_reqs': disk['fl_reqs']
+                        }
+                    except KeyError:
+                        print("'block' key is missing for " + vm['name'])
+
                     # A disk has them or not, don't make them 'None'
                     for key in ('physical', 'allocation', 'capacity'):
                         value = disk.get(key)
@@ -56,12 +64,17 @@ class Collector:
                             values[key] = value
 
                     disks.append(values)
+                 
             domainStats['diskio'] = disks
-            domainStats['memory'] = {
-                'actual': vm['memory']['actual'],
-                'swap_in': vm['memory'].get('swap_in'),
-                'rss': vm['memory']['rss']
-            }
+            try:
+                domainStats['memory'] = {
+                    'actual': vm['memory']['actual'],
+                    'swap_in': vm['memory'].get('swap_in'),
+                    'rss': vm['memory']['rss']
+                }
+            except KeyError:
+                print("'memory' key is missing for " + vm['name'])
+
             balloon = {}
             if vm.get('balloon'):
                 balloon.update(
@@ -75,15 +88,19 @@ class Collector:
 
             domainStats['timestamp'] = datetime.utcnow()
 
-            domainStats['cpu'] = {
-                "usage": {
-                    "system_time": vm['cpu']['system'] / 1000000,
-                    "user_time": vm['cpu']['user'] / 1000000,
-                    "cpu_time": vm['cpu']['time'] / 1000000
-                },
-                "per_cpu_usage": vCpuStats(vm.get('vcpu'))
-            }
+            try:
+                domainStats['cpu'] = {
+                    "usage": {
+                        "system_time": vm['cpu']['system'] / 1000000,
+                        "user_time": vm['cpu']['user'] / 1000000,
+                        "cpu_time": vm['cpu']['time'] / 1000000
+                    },
+                    "per_cpu_usage": vCpuStats(vm.get('vcpu'))
+                }
+            except KeyError:
+                print("'cpu' key is missing for " + vm['name'])    
             stats.append(domainStats)
+            
         return stats
 
     def _bulk_collect(self):
