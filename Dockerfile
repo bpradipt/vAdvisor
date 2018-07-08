@@ -17,7 +17,7 @@ RUN dnf -y install python3-greenlet \
 LABEL io.cadvisor.metric.prometheus-vadvisor="/var/vadvisor/cadvisor_config.json"
 
 RUN \
-    curl -LO https://github.com/kubevirt/vAdvisor/archive/$VERSION.tar.gz#/vAdvisor-$VERSION.tar.gz && \
+    curl -LO https://github.com/bpradipt/vAdvisor/archive/$VERSION.tar.gz#/vAdvisor-$VERSION.tar.gz && \
     tar xf vAdvisor-$VERSION.tar.gz && cd vAdvisor-$VERSION && \
     sed -i '/libvirt-python/d' requirements.txt && \
     sed -i '/\<gevent\>/d' requirements.txt && \
